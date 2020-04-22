@@ -35,7 +35,7 @@ for (let index = 0; index < 128; index++) {
 
 ## 1.2，这个 BLOCK 是最常用的中文集合
 
-![image](./image/2.jpg)
+![image](./image/2.png)
 
 > 叫 CJK 是因为中日韩是放在一起的。
 
@@ -45,7 +45,7 @@ for (let index = 0; index < 128; index++) {
 
 js 的charcode 系列的API，只能处理之前的这些基本的 BMP 字符，兼容性好。 
 
-![image](./image/3.jpg)
+![image](./image/3.png)
 
 之后的字符需要使用下面的 API
 
@@ -146,11 +146,11 @@ tab 在 Unicode 的编码中是 `U+0009`
 
 在 html 中，对一句英文来说，如果它的容器宽度不够了，就会换行，换行是以单词来进行分割的，也就是说，在换行时不会将一个词分开。
 
-![image](./image/4.jpg)
+![image](./image/4.png)
 
 如果想将 javaScript 变成 java script，同时不想让他们在换行时分开，可以 `java&nbsp;script`
 
-![image](./image/5.jpg)
+![image](./image/5.png)
 
 所以，其实可以在浏览器控制台输入 `\u00A0` 后，将打印出的空格复制粘贴到代码中，就可以替换 `&nbsp;`
 
