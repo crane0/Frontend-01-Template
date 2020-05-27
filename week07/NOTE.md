@@ -17,4 +17,7 @@
 
 ![image](./image/viewport.jpg)
 
-## 2，css 基本语法
+## 2，css 基本语法和规则
+
+![image](./image/css.png)
+
