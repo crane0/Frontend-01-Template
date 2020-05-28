@@ -21,3 +21,19 @@
 
 ![image](./image/css.png)
 
+
+获取 [W3C标准](https://www.w3.org/TR/?tag=css)
+``` js
+const list = document.getElementById('container').children
+const ret = []
+
+for (const li of list) {
+  if (li.getAttribute('data-tag').match(/css/)) {
+    ret.push({
+      name: li.children[1].innerText,
+      url: li.children[1].children[0].href
+    })
+  }
+}
+console.log(ret)
+```
