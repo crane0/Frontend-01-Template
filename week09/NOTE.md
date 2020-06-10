@@ -145,13 +145,21 @@ DOM 树中的基本单位是 node，所以DOM树中存的东西，一定是 Node
 
 ### 2.3.1，操作
 
+Nodes 和 element 其实没多少区别
+```
+const a = docuemnt.getElementById('a')
+
+a.children // HTMLCollection []
+a.childNodes // NodeList(4) [div, div, div, div]
+```
+
 1，导航类操作
 
 Node相关（有对应的element）
 
 - parentNode
-- childNodes
-> 所有的修改操作，会实时改变这个属性，在 js 中获取的数组也会实时变化
+- childNodes (children)
+> living collection，所有的修改操作，会实时改变这个属性，在 js 中获取的数组也会实时变化
 
 - firstChild
 - lastChild
@@ -170,4 +178,67 @@ Node相关（有对应的element）
 
 所以，只要将其挂到另一个位置，之前位置处自动就被摘下来。
 
+
+==living collection==
+
+```
+<div id="a">
+  <div>1</div>
+  <div>2</div>
+  <div>3</div>
+  <div>4</div>
+</div>
+
+<div id="b"></div>
+
+<script>
+  const a = document.getElementById('a')
+  const b = document.getElementById('b')
+  for (let i = 0; i < a.children.length; i++) {
+    b.appendChild(a.children[i])
+  }
+</script>
+```
+因为实时改变的，所以最终 element是：
+```
+<div id="a">
+  <div>2</div>
+  <div>4</div>
+</div>
+
+<div id="b">
+  <div>1</div>
+  <div>3</div>    
+</div>
+```
+所以，如果要将 a 中的 children 依次放入 b 中，可以这样
+```
+while (a.children.length) {
+  b.appendChild(a.children[0])
+}
+```
+
+事情并没有完。可以看到上面代码中使用的都是 `a.children`，并没有使用 `a.childNodes`。当上面的代码执行完成后，再看 `a.children` 和 `a.childNodes` 都是什么:
+
+![image](./image/image.png)
+
+<details>
+  <summary>为什么都是 text?</summary>
+  
+  因为这个例子中的 html 的书写，用的就是留有空格的形式，这些空格都是 text 节点。所以都保留着。并且可以看到有5个。
+  
+  所以，如果用 `childNodes.length` 遍历的话，最后会有一个 undefined 报错。
+  
+  所以，在操作 element 时，最好使用 element相关的 API。
+</details>
+
+<br>
+
 3，高级操作
+
+- document.compareDocumentPosition，比较2个节点中的关系（document 的先后等）
+- document.contains，检查一个节点是否包含另一个节点
+- document.isEqualNode，检查2个节点是否完全相同
+- document.isSameNode，检查2个节点是否是同一个节点，事实上，在 js 中可以用 `===` 来比较。
+- document.cloneNode，复制一个节点，如果传入参数 true，则会连同子元素做深拷贝。
+
