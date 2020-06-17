@@ -242,3 +242,13 @@ while (a.children.length) {
 - document.isSameNode，检查2个节点是否是同一个节点，事实上，在 js 中可以用 `===` 来比较。
 - document.cloneNode，复制一个节点，如果传入参数 true，则会连同子元素做深拷贝。
 
+# 3，DOM API，事件循环
+
+1，addEventListener 的第2个参数，可以传递对象。
+
+```
+document.body.addEventListener('click', { handleEvent: function() {console.log(1111)} })
+```
+
+2，第3个参数，true：冒泡，false，捕获（默认）
+- 先捕获，再冒泡。
