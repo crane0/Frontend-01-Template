@@ -1,0 +1,221 @@
+<style>
+  .cell {
+    width: 100px;
+    height: 100px;
+    background-color: green;
+    display: inline-block;
+    border: solid 1px white;
+    vertical-align: middle;
+    line-height: 100px;
+    font-size: 50px;
+    text-align: center;
+    cursor: pointer;
+  }
+</style>
+<div id="board"></div>
+<script>
+  let pattern = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ]
+  let color = 1
+  function show() {
+    let board = document.getElementById('board')
+    board.innerHTML = ''
+
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        let cell = document.createElement('div')
+        cell.classList.add('cell')
+        cell.innerText = 
+          pattern[i][j] === 2 ? '❌' :
+          pattern[i][j] === 1 ? '⭕️' : ''
+        cell.addEventListener('click', () => move(j, i))
+        board.appendChild(cell)
+      }
+      board.appendChild(document.createElement('br'))
+    }
+  }
+
+  function move(x, y) {
+    // 同一位置多次点击无效，每个位置初始值就是 0
+    if (pattern[y][x] !== 0) {
+      return
+    }
+    pattern[y][x] = color
+    if (check(pattern, color)) {
+      alert(color === 2 ? `❌ win` : `⭕️ win`)
+    }
+    // 交替 x o
+    color = 3 - color
+    console.log('color', color)
+    show()
+    // 自动走下一步，并且是最优解
+    computerMove()
+    // winWin 的逻辑，color 变化后再计算
+    // if (willWin(pattern, color)) {
+    //   console.log(color === 2 ? `❌ will win` : `⭕️ will win`)
+    // }
+  }
+
+
+  /* 
+    每走一步，在控制台调用下面的函数，就可以自动走出最优解
+   */
+   function computerMove() {
+    let choise = bestChoise(pattern, color)
+    if (choise.point) {
+      pattern[choise.point[1]][choise.point[0]] = color
+    }
+    if (check(pattern, color)) {
+      alert(color === 2 ? `❌ win` : `⭕️ win`)
+    }
+    color = 3 - color
+    show()
+  }
+
+  function check(pattern, color) {
+    // 横向
+    for (let i = 0; i < 3; i++) {
+      let win = true
+      for (let j = 0; j < 3; j++) {
+        if (pattern[i][j] !== color) {
+          win = false
+        }
+      }
+      // 如果经历了一次遍历还是 true，那表示有一行已经满足了。直接return掉
+      // 注意，这里不等价与直接 return win，因为必须是 true，才会主动 return，否则要遍历完才能确定。
+      if (win) {
+        return true
+      }
+    }
+
+    // 纵向
+    for (let i = 0; i < 3; i++) {
+      let win = true
+      for (let j = 0; j < 3; j++) {
+        if (pattern[j][i] !== color) {
+          win = false
+        }
+      }
+      if (win) {
+        return true
+      }
+    }
+
+    // 从左到右的斜边
+    // {} 配合 let 就实现了块级作用域，win 变量相互不影响
+    {
+      let win = true
+      for (let j = 0; j < 3; j++) {
+        if (pattern[j][j] !== color) {
+          win = false
+        }
+      }
+      if (win) {
+        return true
+      }
+    }
+
+    // 从右到左的斜边
+    {
+      let win = true
+      for (let j = 0; j < 3; j++) {
+        if (pattern[j][2-j] !== color) {
+          win = false
+        }
+      }
+      if (win) {
+        return true
+      }
+    }
+  }
+
+  function clone(pattern) {
+    return JSON.parse(JSON.stringify(pattern))
+  }
+
+  // 遍历空白区域，如果和当前的 color 可以组成，则说明快赢了
+  function willWin(pattern, color) {
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        // 说明不是空白区域
+        if (pattern[i][j] !== 0) {
+          continue
+        }
+        // clone 出新的，不改变原来的 
+        let tmp = clone(pattern)
+        tmp[i][j] = color
+        if (check(tmp, color)) {
+          return [j, i]
+        }
+      }
+    }
+  }
+
+
+  // 开局棋谱
+  let openings = new Map()
+  openings.set([
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0],
+  ].toString(), {
+    point: [1, 1],
+    result: 0
+  })
+
+  /* 
+    1胜，0平，-1输
+    willWin 判断的逻辑，和 for 循环中没有空位置时 continue，是保证递归可以结束的条件。
+
+    调试时，可以直接在控制台输入 bestChoise(pattern, color) ，查看当前 color 的情况。
+   */
+  function bestChoise(pattern, color) {
+    // 尝试导入开局棋谱
+    // if (openings.has(pattern.toString())) {
+    //   console.log(openings.get(pattern.toString()))
+    //   return openings.get(pattern.toString())
+    // }
+
+    let point = willWin(pattern, color)
+    if (point) {
+      return {
+        point: point,
+        result: 1
+      }
+    }
+
+    let result = -1
+    outer: for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (pattern[i][j] !== 0) {
+          continue
+        }
+        let tmp = clone(pattern)
+        tmp[i][j] = color
+        // 在对方的 bestChoise 中选择对我最有利的点走（对方的 bestChoise 的最差情况）
+        let opportunity = bestChoise(tmp, 3 - color)
+        if (result <= -opportunity.result) {
+          point = [j ,i]
+          result =  -opportunity.result
+        }
+        /* 
+          涉及递归的剪枝：如果情况有太多，会剪掉概率比较小的情况，来保证运算速度。
+          下面这个判断用到的是，输赢剪枝，如果找到一个必赢的点，那就不用再继续循环判断了。
+         */
+        if (result == 1) {
+          break outer
+        }
+      }
+    }
+
+    return {
+      point: point,
+      // 在循坏中找不到可以走的点，平局
+      result: point ? result : 0
+    }
+  }
+  show()
+</script>
