@@ -1,0 +1,60 @@
+<style>
+  .cell {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
+    background-color: gray;
+  }
+  #container {
+    width: 700px;
+  }
+</style>
+<div id="container"></div>
+<button onclick="localStorage.map = JSON.stringify(map)">save</button>
+
+<script>
+  // 存到 localstorage 中，刷新页面就不会重置了
+  const map = localStorage.map ? JSON.parse(localStorage.map) : new Array(10000).fill(0)
+  const container = document.getElementById('container')
+  for (let y = 0; y < 100; y++) {
+    for (let x = 0; x < 100; x++) {
+      const cell = document.createElement('div')
+      cell.classList.add('cell')
+
+      if (map[100*y + x] === 1) {
+        cell.style.backgroundColor = 'black'
+      }
+      cell.addEventListener('mousemove', () => {
+        if (mouse) {
+          // 橡皮擦
+          if (clear) {
+            cell.style.backgroundColor = ''
+            map[100*y + x] = 0
+          } else {
+            cell.style.backgroundColor = 'black'
+            map[100*y + x] = 1
+          }
+        }
+      })
+      container.appendChild(cell)
+    }
+  }
+
+  // 鼠标是否按下标志位
+  let mouse = false
+  // 是否是清除操作
+  let clear = false
+
+  // 在 document 监听，因为可能会从 container 外面划入进来。而且也能避免其他一些边缘情况。
+  document.addEventListener('mousedown', (e) => {
+    mouse = true
+    // 鼠标右键
+    clear = e.button == 2
+  })
+  document.addEventListener('mouseup', () => mouse = false)
+
+  // 禁止掉默认的鼠标右键功能，才能自定义
+  document.addEventListener('contextmenu', (e) => e.preventDefault())
+</script>

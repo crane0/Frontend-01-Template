@@ -1,0 +1,89 @@
+<style>
+  div {
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: gray;
+    margin: 20px;
+  }
+  .red.light {
+    background-color: red;
+  }
+  .yellow.light {
+    background-color: yellow;
+  }
+  .green.light {
+    background-color: green;
+  }
+</style>
+
+<div class="red"></div>
+<div class="yellow"></div>
+<div class="green"></div>
+
+<script>
+  function red() {
+    const ele = document.getElementsByClassName('red')
+    for (let i = 0; i < 3; i++) {
+      document.getElementsByTagName('div')[i].classList.remove('light')
+    }
+    ele[0].classList.add('light')
+  }
+  function yellow() {
+    const ele = document.getElementsByClassName('yellow')
+    for (let i = 0; i < 3; i++) {
+      document.getElementsByTagName('div')[i].classList.remove('light')
+    }
+    ele[0].classList.add('light')
+  }
+  function green() {
+    const ele = document.getElementsByClassName('green')
+    for (let i = 0; i < 3; i++) {
+      document.getElementsByTagName('div')[i].classList.remove('light')
+    }
+    ele[0].classList.add('light')
+  }
+
+
+  function sleep(time) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, time)
+    })
+  }
+
+  // 红灯 5s，绿灯 10s，黄灯 2s
+  function* go() {
+    while (true) {
+      red()
+      yield sleep(5000)
+      green()
+      yield sleep(10000)
+      yellow()
+      yield sleep(2000)
+    }
+  }
+
+  function co(iterator) {
+    let {value, done} = iterator.next()
+    if (done) {
+      return
+    }
+    value.then(() => {
+      co(iterator)
+    })
+  }
+
+  // co(go())
+
+  // 或者下面的方式
+  function co1(generator) {
+    return function () {
+      return co(generator())
+    }
+  }
+
+  go = co1(go)
+  go()
+
+</script>

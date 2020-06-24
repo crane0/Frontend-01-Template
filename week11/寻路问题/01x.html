@@ -1,0 +1,51 @@
+<style>
+  .cell {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
+    background-color: gray;
+  }
+  #container {
+    width: 700px;
+  }
+</style>
+<div id="container"></div>
+<script>
+  const container = document.getElementById('container')
+  for (let i = 0; i < 100; i++) {
+    for (let j = 0; j < 100; j++) {
+      const cell = document.createElement('div')
+      cell.classList.add('cell')
+      cell.addEventListener('mousemove', () => {
+        if (mouse) {
+          // 橡皮擦
+          if (clear) {
+            cell.style.backgroundColor = ''
+          } else {
+            cell.style.backgroundColor = 'black'
+          }
+        }
+      })
+      container.appendChild(cell)
+    }
+  }
+
+  // 鼠标是否按下标志位
+  let mouse = false
+  // 是否是清除操作
+  let clear = false
+
+  // 在 document 监听，因为可能会从 container 外面划入进来。而且也能避免其他一些边缘情况。
+  document.addEventListener('mousedown', (e) => {
+    console.log(e.which, typeof e.which)
+    mouse = true
+    // 鼠标右键
+    clear = e.which == 3
+  })
+  document.addEventListener('mouseup', () => mouse = false)
+
+  // 禁止掉默认的鼠标右键功能，才能自定义
+  document.addEventListener('contextmenu', (e) => e.preventDefault())
+</script>
