@@ -1,0 +1,50 @@
+<style>
+  .keywords {
+    color: rgb(101,141,194);
+  }
+  .indentifier {
+    color: blue;
+  }
+  .punctuator {
+    color: plum;
+  }
+</style>
+<pre id="container"></pre>
+
+<script>
+  var source = `
+    function sleep(time) {
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, time)
+      })
+    }
+  `
+  var regexp = /(function|return|new)|([ \t\r\n]+)|([a-zA-z][a-zA-Z0-9]*)|([\(\)\{\}\,\;])/g
+  // 关键字，空格，标识符，标点符号
+  var dictionary = ['keywords', 'whitespace','indentifier','punctuator']
+
+  var token = null
+  var lastIndex = 0
+  var container = document.getElementById('container')
+
+  do {
+    lastIndex = regexp.lastIndex
+    token = regexp.exec(source)
+    if (!token) break
+
+    let text = document.createElement('span')
+    text.textContent = token[0]
+    
+    /* 
+      为什么用 1 开始？
+      因为每次执行 exec 得到的 token 中，有5个元素，除了第一个，剩下的对应的是 regexp 每个括号匹配到的内容，
+      如果匹配到了，就添加 class。
+    */
+    for (let i = 1; i < 5; i++) {
+      if (token[i]) {
+        text.classList.add(dictionary[i-1])
+      }
+    }
+    container.appendChild(text)
+  } while (token)
+</script>
