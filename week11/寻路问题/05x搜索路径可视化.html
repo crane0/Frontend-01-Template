@@ -1,0 +1,123 @@
+<style>
+  .cell {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
+    background-color: gray;
+  }
+  #container {
+    width: 701px;
+  }
+</style>
+<div id="container"></div>
+<button onclick="localStorage.map = JSON.stringify(map)">save</button>
+
+<script>
+  // 存到 localstorage 中，刷新页面就不会重置了
+  const map = localStorage.map ? JSON.parse(localStorage.map) : new Array(10000).fill(0)
+  const container = document.getElementById('container')
+  for (let y = 0; y < 100; y++) {
+    for (let x = 0; x < 100; x++) {
+      const cell = document.createElement('div')
+      cell.classList.add('cell')
+
+      if (map[100*y + x] === 1) {
+        cell.style.backgroundColor = 'black'
+      }
+      cell.addEventListener('mousemove', () => {
+        if (mouse) {
+          // 橡皮擦
+          if (clear) {
+            cell.style.backgroundColor = ''
+            map[100*y + x] = 0
+          } else {
+            cell.style.backgroundColor = 'black'
+            map[100*y + x] = 1
+          }
+        }
+      })
+      container.appendChild(cell)
+    }
+  }
+
+  // 鼠标是否按下标志位
+  let mouse = false
+  // 是否是清除操作
+  let clear = false
+
+  // 在 document 监听，因为可能会从 container 外面划入进来。而且也能避免其他一些边缘情况。
+  document.addEventListener('mousedown', (e) => {
+    mouse = true
+    // 鼠标右键
+    clear = e.button == 2
+  })
+  document.addEventListener('mouseup', () => mouse = false)
+
+  // 禁止掉默认的鼠标右键功能，才能自定义
+  document.addEventListener('contextmenu', (e) => e.preventDefault())
+
+
+  function sleep(time) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, time)
+    })
+  }
+  /*
+    搜索路径可视化的思路：
+    记录上次的 [x, y]
+  */
+  async function findPath(map, start, end) {
+    map = map.slice()
+    let queue = [start]
+
+    async function insert([x, y], pre) {
+      // 只插入空位置的
+      if (map[100*y+x] !== 0) {
+        return
+      }
+      // 100*100范围内
+      if (x < 0 || y < 0 || x >= 100 || y >= 100) {
+        return
+      }
+
+      // 上面已经用了 0，初始状态，1，手动绘制状态，pre，标记路径状态
+      map[100*y + x] = pre
+      container.children[y*100+x].style.backgroundColor = 'lightgreen'
+      await sleep(1)
+      queue.push([x, y])
+    }
+
+    // 从 start 点开始，上下左右4个点依次填充，再递归找这4个点的上下左右。
+    while (queue.length) {
+      // 取出第一个
+      let [x, y] = queue.shift()
+      // 找到终点了
+      if (x === end[0] && y === end[1]) {
+        let path = []
+        // [x, y] 不是起点时，从终点一直循环找到起点，path 会连成一条线。
+        // 整个过程是，不断的找当前点是由哪个点（9宫格的中心点）计算而来。
+        while (x !== start[0] || y !== start[1]) {
+          path.push([x, y])
+          // 注意后面要有分号，否则解构会有问题，x y 值不变，导致死循环
+          container.children[y*100+x].style.backgroundColor = 'pink'; // path 的颜色
+          [x, y] = map[100*y + x]
+        }
+        return path
+      }
+      // 上下左右
+      await insert([x, y-1], [x, y])
+      await insert([x, y+1], [x, y])
+      await insert([x-1, y], [x, y])
+      await insert([x+1, y], [x, y])
+
+      // 下面的代码，可以让 path 稍微走点斜线。因为搜索从十字5个方向 --> 9宫格8个方向
+      await insert([x-1, y+1], [x, y])
+      await insert([x+1, y+1], [x, y])
+      await insert([x-1, y-1], [x, y])
+      await insert([x+1, y-1], [x, y])
+    }
+    return null
+  }
+</script>
