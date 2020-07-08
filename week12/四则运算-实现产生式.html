@@ -1,0 +1,158 @@
+<script>
+  let regexp = /([0-9\.]+)|([ ]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g
+  let dict = ['Number', 'WhiteSpace', 'LineTerminator', '+', '-', '*', '/']
+
+  // yeild 版本
+  function* tokenise(source) {
+    let result = null
+    let lastIndex = 0
+
+    while(true) {
+      lastIndex = regexp.lastIndex
+      result = regexp.exec(source)
+
+      if (!result) {
+        break
+      }
+      // 非法字符
+      if (regexp.lastIndex - lastIndex > result[0].length) {
+        throw new Error("Unexpected token \"" + source.slice(lastIndex, regexp.lastIndex - result[0].length) + "\"!")
+      }
+
+      let token = {
+        type: null,
+        value: null
+      }
+      for (let i = 0; i < dict.length; i++) {
+        if (result[i+1]) {
+          token.type = (dict[i])
+        }
+      }
+      token.value = (result[0])
+      yield token
+    }
+
+    yield {type: 'EOF'}
+  }
+
+  /* 
+    根据产生式，实现乘法表达式
+    <MultiplicativeExpression> ::=
+        <Number>
+        <MultiplicativeExpression> <*> <Number>
+        <MultiplicativeExpression> </> <Number>
+    
+    产生式中为什么没有 Number * Number，因为这样就无法定义连乘
+    MultiplicativeExpression 开头 2种情况
+   */
+  function MultiplicativeExpression(source) {
+    if (source[0].type === "Number") {
+      let node = {
+        type: 'MultiplicativeExpression',
+        children: source.shift()
+      }
+      source.unshift(node)
+      return MultiplicativeExpression(source)
+    }
+    if (source[0].type === "MultiplicativeExpression" && source.length > 1 && source[1].type === '*') {
+      let node = {
+        type: 'MultiplicativeExpression',
+        children: [source.shift(), source.shift(), source.shift()]
+      }
+      source.unshift(node)
+      return MultiplicativeExpression(source)
+    }
+    if (source[0].type === "MultiplicativeExpression" && source.length > 1 && source[1].type === '/') {
+      let node = {
+        type: 'MultiplicativeExpression',
+        children: [source.shift(), source.shift(), source.shift()]
+      }
+      source.unshift(node)
+      return MultiplicativeExpression(source)
+    }
+    // 遇到不认识的字符，结束
+    if (source[0].type === "MultiplicativeExpression") {
+      return source[0]
+    }
+  }
+
+  /* 
+      <AdditiveExpression> ::=
+        <MultiplicativeExpression>
+        <AdditiveExpression> <+> <MultiplicativeExpression>
+        <AdditiveExpression> <-> <MultiplicativeExpression>
+      
+      MultiplicativeExpression 不是终结符，所以需要展开，
+      开头有3种情况。Number, MultiplicativeExpression, AdditiveExpression 
+
+      <AdditiveExpression> ::=
+        <Number>
+        <MultiplicativeExpression> <*> <Number>
+        <MultiplicativeExpression> </> <Number>
+        <AdditiveExpression> <+> <MultiplicativeExpression>
+        <AdditiveExpression> <-> <MultiplicativeExpression>
+   */
+  function AdditiveExpression(source) {
+    if (source[0].type === "Number") {
+      MultiplicativeExpression(source)
+      return AdditiveExpression(source)
+    }
+    if (source[0].type === "MultiplicativeExpression") {
+      let node = {
+        type: 'AdditiveExpression',
+        children: [source.shift()]
+      }
+      source.unshift(node)
+      return AdditiveExpression(source)
+    }
+    if (source[0].type === "AdditiveExpression" && source.length > 1 && source[1].type === '+') {
+      let node = {
+        type: 'AdditiveExpression',
+        children: [source.shift(), source.shift()]
+      }
+      MultiplicativeExpression(source)
+      node.children.push(source.shift())
+      source.unshift(node)
+      return AdditiveExpression(source)
+    }
+    if (source[0].type === "AdditiveExpression" && source.length > 1 && source[1].type === '-') {
+      let node = {
+        type: 'AdditiveExpression',
+        children: [source.shift(), source.shift()]
+      }
+      MultiplicativeExpression(source)
+      node.children.push(source.shift())
+      source.unshift(node)
+      return AdditiveExpression(source)
+    }
+    // 遇到不认识的字符，结束
+    if (source[0].type === "AdditiveExpression") {
+      return source[0]
+    }
+  }
+
+  /* 
+    <Expression> ::=
+        <AdditiveExpression><EOF>
+   */
+  function Expression(source) {
+    if (source[0].type === 'AdditiveExpression' && source[1].type ==='EOF') {
+      let node = {
+        type: 'Expression',
+        children: [source.shift(), source.shift()]
+      }
+      source.unshift(node)
+      return node
+    }
+    AdditiveExpression(source)
+    return Expression(source)
+  }
+
+  let source = []
+  for (const token of tokenise('2 + 1024 * 25')) {
+    if (token.type !== "WhiteSpace" && token.type !== "LineTerminator") {
+      source.push(token)
+    }
+  }
+  console.log(Expression(source))
+</script>

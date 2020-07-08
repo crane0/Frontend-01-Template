@@ -1,0 +1,30 @@
+<script>
+  let regexp = /([0-9\.]+)|([ ]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g
+  let dict = ['Number', 'WhiteSpace', 'LineTerminator', '+', '-', '*', '/']
+
+  function tokenise(source) {
+    let result = null
+    let lastIndex = 0
+
+    do {
+      lastIndex = regexp.lastIndex
+      result = regexp.exec(source)
+
+      if (!result) {
+        break
+      }
+      // 非法字符
+      if (regexp.lastIndex - lastIndex > result[0].length) {
+        throw new Error("Unexpected token \"" + source.slice(lastIndex, regexp.lastIndex - result[0].length) + "\"!")
+      }
+
+      for (let i = 0; i < dict.length; i++) {
+        if (result[i+1]) {
+          console.log(dict[i])
+        }
+      }
+    } while (result);
+  }
+  // tokenise('1024 + 10 * 25')
+  tokenise('!1024 + 10 * 25')
+</script>

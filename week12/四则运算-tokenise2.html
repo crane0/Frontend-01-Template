@@ -1,0 +1,41 @@
+<script>
+  let regexp = /([0-9\.]+)|([ ]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g
+  let dict = ['Number', 'WhiteSpace', 'LineTerminator', '+', '-', '*', '/']
+
+  // yeild 版本
+  function* tokenise(source) {
+    let result = null
+    let lastIndex = 0
+
+    while(true) {
+      lastIndex = regexp.lastIndex
+      result = regexp.exec(source)
+
+      if (!result) {
+        break
+      }
+      // 非法字符
+      if (regexp.lastIndex - lastIndex > result[0].length) {
+        throw new Error("Unexpected token \"" + source.slice(lastIndex, regexp.lastIndex - result[0].length) + "\"!")
+      }
+
+      let token = {
+        type: null,
+        value: null
+      }
+      for (let i = 0; i < dict.length; i++) {
+        if (result[i+1]) {
+          token.type = dict[i]
+        }
+      }
+      token.value = result[0]
+      yield token
+    }
+
+    yield {type: 'EOF'}
+  }
+
+  for (const token of tokenise('1024 + 10 * 25')) {
+    console.log(token)
+  }
+</script>
