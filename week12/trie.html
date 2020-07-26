@@ -1,0 +1,39 @@
+<script>
+  class Trie {
+    constructor() {
+      this.root = Object.create(null)
+    }
+    insert(word) {
+      let node = this.root
+      for (const c of word) {
+        if (!node[c]) {
+          node[c] = Object.create(null)
+        }
+        /* 
+          第1次，node[g] = {}，此时 node = {g: {}}，也就是this.root = {g: {}}。
+            之后对 node 重新赋值为一个空对象，这个空对象对应的就是 this.root.g
+          第2次，node[o] = {}，此时 node = {o: {}}，也就是this.root.g = { o: {}}。之后依次循环
+         */
+        node = node[c]
+      }
+      if (!('$' in node)) {
+        node['$'] = 0
+      }
+    }
+  }
+
+  var trie = new Trie()
+  trie.insert('good')
+
+  function randomWord(length) {
+    var s = ''
+    for (let i = 0; i < length; i++) {
+      s += String.fromCharCode(Math.random() * 26 + 'a'.charCodeAt())
+    }
+    return s
+  }
+
+  // for (let i = 0; i < 10000; i++) {
+  //   trie.insert(randomWord(4))
+  // }
+</script>

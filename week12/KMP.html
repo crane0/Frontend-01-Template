@@ -1,0 +1,136 @@
+<script>
+  function find(source, pattern) {
+    for (let i = 0; i < source.length; i++) {
+      let matched = true
+      for (let j = 0; j < pattern.length; j++) {
+        if (source[i + j] !== pattern[j]) {
+          matched = false
+          break
+        }
+        if (matched) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
+  /* 
+    find2('abcdsr', 'ds') true
+    find2('abcddsr', 'ds') false
+    find2('abcdddsr', 'ds') true
+    解决，find3
+   */
+  function find2(source, pattern) {
+    let j = 0
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] === pattern[j]) {
+        j++
+      } else {
+        j = 0
+      }
+      if (j === pattern.length) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /* 
+    find3('abcabcabx', 'abcabx') false
+    因为 abcabc 中的 c 已经被 abcabx 中的 x 消费了。
+   */
+  function find3(source, pattern) {
+    let j = 0
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] === pattern[j]) {
+        j++
+      } else {
+        j = 0
+        if (source[i] === pattern[j]) {
+          j++
+        }
+      }
+      if (j === pattern.length) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /* 
+    find4('abcabcabx', 'abcabx')，则 table = [0, 0, 0, 1, 2, 0]
+    find4('abcababcabx', 'abcabx') false，解决 find5
+   */
+  function find4(source, pattern) {
+    let table = new Array(pattern.length).fill(0)
+    let k = 0
+    for (let j = 1; j < pattern.length; j++) {
+      if (pattern[j] === pattern[k]) {
+        k++
+      } else {
+        k = 0
+      }
+      table[j] = k
+    }
+
+    let j = 0
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] === pattern[j]) {
+        j++
+      } else {
+        /* 
+          source 走到 abcabc 时，c 和 x 不相等，但是出现了相同的 abc，
+          所以应该继续用 source 中 abcabcabx 中的 abcabx 和 pattern 比较，
+          此时，i 走到了第二个 c，所以 j 应该从 pattern 中的 c 开始。
+          所以，通过构造出的 table，就可以知道 j 从哪里开始继续比较，
+         */
+        j = table[j - 1]
+        if (source[i] === pattern[j]) {
+          j++
+        }
+      }
+      if (j === pattern.length) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /* 
+    find5('abcababcabx', 'abcabx') true
+    参考 阮一峰博客 http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html
+   */
+  function find5(source, pattern) {
+    let table = new Array(pattern.length).fill(0)
+    let k = 0
+    for (let j = 1; j < pattern.length; j++) {
+      if (pattern[j] === pattern[k]) {
+        k++
+      } else {
+        k = 0
+      }
+      table[j] = k
+    }
+
+    let j = 0
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] === pattern[j]) {
+        j++
+      } else {
+        while (source[i] !== pattern[j] && j > 0) {
+          j = table[j - 1]
+        }
+        if (source[i] === pattern[j]) {
+          j++
+        } else {
+          j = 0
+        }
+      }
+      if (j === pattern.length) {
+        return true
+      }
+    }
+    return false
+  }
+</script>
