@@ -1,0 +1,26 @@
+<div id="dragable" style="width: 100px; height: 100px; background-color: pink;"></div>
+<script>
+  let dragable = document.getElementById('dragable')
+  /* 
+    client，鼠标点击绑定元素的位置，距离窗口左上角的坐标。
+      x 和 startX 在 mousedown 一开始时是相同的，都是相对于窗口左上角的坐标，
+      mousemove 绑定在 document 上，所以鼠标在移动时，x 会一直变化，减去初始位置，就会得到鼠标点击在 dragable 上的位置了。
+    所以，如果不减 startX，鼠标点击时，dragable 的左上角就会闪烁到鼠标点击位置。因为 x 绑定的元素是 document 。
+  */
+  dragable.addEventListener('mousedown', event => {
+    let startX = event.clientX, startY = event.clientY
+    let move = event => {
+      let x = event.clientX, y = event.clientY
+      console.log(startX, x)
+      dragable.style.transform = `translate(${x-startX}px, ${y-startY}px)`
+    }
+    let up = () => {
+      // 要将之前的清理掉，否则 document 上监听的事件会越来越多，
+      // document 上监听事件的好处：离开浏览器范围（比如浏览器窗口比较小，滑到外面去时），监听还是会触发。
+      document.removeEventListener('mousemove', move)
+      document.removeEventListener('mouseup', up)
+    }
+    document.addEventListener('mousemove', move)
+    document.addEventListener('mouseup', up)
+  })
+</script>

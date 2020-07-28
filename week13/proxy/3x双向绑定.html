@@ -1,0 +1,108 @@
+<input id="r" type="range" min="0" max="255">
+<input id="g" type="range" min="0" max="255">
+<input id="b" type="range" min="0" max="255">
+<div id="box" style="width: 100px; height: 100px; border: 1px solid salmon;"></div>
+<script>
+  let object = {
+    a: 1,
+    b: 2
+  }
+
+  let handlers = new Map()
+  let reactivities = new Map()
+  let usedReactivities = []
+
+  function reactive(obj) {
+    // 将每个 reactive(obj) 存储起来，否则当 object 出现嵌套对象时，每次返回的都是一个新的对象。这样对性能会更好。
+    if (reactivities.has(obj)) {
+      return reactivities.get(obj)
+    }
+    let proxy = new Proxy(obj, {
+      get(obj, prop) {
+        /* 
+          为什么要用将 [obj, prop] 整体都放进去呢？
+          因为 reactive 和 usedReactivities 都是全局的，为了适配所有对象。
+        */
+        usedReactivities.push([obj, prop])
+        // object 可能会嵌套对象。
+        if (typeof obj[prop] === 'object') {
+          return reactive(obj[prop])
+        }
+        return obj[prop]
+      },
+      set(obj, prop, val) {
+        obj[prop] = val
+        // 只有对应的对象的属性，才会执行。
+        if (handlers.get(obj) && handlers.get(obj).get(prop)) {
+          for (const handler of handlers.get(obj).get(prop)) {
+            handler()
+          }
+        }
+        return obj[prop]
+      }
+    })
+
+    reactivities.set(obj, proxy)
+    // reactivities.set(proxy, proxy)
+
+    return proxy
+  }
+
+  /* 
+    执行 effect 时，先执行了一次传入的 handler，触发 new Proxy 中的 get 方法，向 usedReactivities 数组中添加了内容。
+    接着，遍历 usedReactivities 数组，解构得到 [obj, prop]，
+    接着，向 handlers 中设置 {obj, new Map()} 的键值对。在对该 obj 设置 {prop, []} 的键值对。
+    最后，将最开始传入的 handler 添加到 prop 对应的数组中。
+    所谓，依赖收集。
+
+    effect() 执行完成后，proxy.a = 2 触发 new Proxy 中的 set 方法时，就会执行该 prop 对应的 handler 方法，对 dummy 重新赋值。
+
+    可以看出，在执行 effect 时，将对 dummy 进行赋值的函数 handler 和读取的 object.prop 绑定在一起，
+      之后再对该 prop 执行赋值时，就会再次触发 handler，dummy 也就实时更新了。
+  */
+  function effect(handler) {
+    /* 
+      要清空是因为，usedReactivities 的作用其实是为了将 object.prop 对应的 handler 绑定在一起。
+      如果不清空，下次又会新添加，在下面遍历时，就会出问题了。
+    */
+    usedReactivities = []
+    handler()
+    for (const usedReactivity of usedReactivities) {
+      let [obj, prop] = usedReactivity
+      if (!handlers.has(obj)) {
+        handlers.set(obj, new Map())
+      }
+      if (!handlers.get(obj).has(prop)) {
+        handlers.get(obj).set(prop, [])
+      }
+      handlers.get(obj).get(prop).push(handler)
+    }
+  }
+
+  // let dummy
+  // let proxy = reactive(object)
+
+  // effect(() => dummy = proxy.a)
+  // console.log(dummy)
+  // proxy.a = 2
+  // console.log(dummy)
+
+  // 双向绑定
+  let p = reactive({ r: 100, g: 100, b: 100 })
+  effect(() => document.getElementById('r').value = p.r)
+  effect(() => document.getElementById('g').value = p.g)
+  effect(() => document.getElementById('b').value = p.b)
+  document.getElementById('r').addEventListener('input', event => {
+    p.r = event.target.value
+  })
+  document.getElementById('g').addEventListener('input', event => {
+    p.g = event.target.value
+  })
+  document.getElementById('b').addEventListener('input', event => {
+    p.b = event.target.value
+  })
+
+  effect(() => {
+    document.getElementById('box').style.backgroundColor = `rgb(${p.r}, ${p.g}, ${p.b})`
+  })
+</script>
