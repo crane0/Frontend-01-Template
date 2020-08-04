@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .carousel {
+      width: 500px;
+      height: 300px;
+      outline: 1px solid salmon;
+      white-space: nowrap;
+      /* overflow: hidden; */
+      zoom: 0.25;
+      margin: 0 auto;
+    }
+    .carousel > img {
+      width: 100%;
+      height: 100%;
+      transition: transform 1s;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script>
+    /* 
+      相比3x.html，增加了鼠标拖拽第1版，大致逻辑。
+      注意，自动动画和拖拽动画，现在还不能共存，有意料之外的问题。
+    */
+    class Carousel {
+      constructor() {
+        this.data = null
+        this.root = null
+      }
+
+      render() {
+        this.root = document.createElement('div')
+        this.root.classList = 'carousel'
+        for (const d of this.data) {
+          let img = document.createElement('img')
+          img.src = d
+          // img.addEventListener('selectstart', event => event.preventDefault())
+          // 如果用上面的，鼠标松开，会一直动。
+          img.addEventListener('dragstart', event => event.preventDefault())
+          this.root.appendChild(img)
+        }
+
+        let position = 0
+        let next = () => {
+          let nextPosition = (position + 1) % this.data.length
+
+          let currentPic = this.root.childNodes[position]
+          let nextPic = this.root.childNodes[nextPosition]
+
+          currentPic.style.transition = 'ease 0s'
+          nextPic.style.transition = 'ease 0s'
+          currentPic.style.transform = `translateX(${-100 * position}%)`
+          nextPic.style.transform = `translateX(${100-100 * nextPosition}%)`
+
+          setTimeout(() => {
+            currentPic.style.transition = '' // '' 表示用 css 控制
+            nextPic.style.transition = ''
+            currentPic.style.transform = `translateX(${-100-100 * position}%)`
+            nextPic.style.transform = `translateX(${-100 * nextPosition}%)`
+            position = nextPosition
+          }, 16)
+          setTimeout(next, 2000)
+        }
+        // 一开始的延迟，保证第1个图片出现。
+        // setTimeout(next, 2000)
+
+
+        this.root.addEventListener('mousedown', event => {
+          let startX = event.clientX
+          
+          let lastPosition = (position - 1 + this.data.length) % this.data.length // 这是一个技巧
+          let nextPosition = (position + 1) % this.data.length
+
+          let currentPic = this.root.childNodes[position]
+          let lastPic = this.root.childNodes[lastPosition]
+          let nextPic = this.root.childNodes[nextPosition]
+
+          currentPic.style.transition = 'ease 0s'
+          lastPic.style.transition = 'ease 0s'
+          nextPic.style.transition = 'ease 0s'
+
+          currentPic.style.transform = `translateX(${- 500 * position}px)`
+          lastPic.style.transform = `translateX(${-500 - 500 * lastPosition}px)`
+          nextPic.style.transform = `translateX(${500 - 500 * nextPosition}px)`
+
+
+          let move = event => {
+            currentPic.style.transform = `translateX(${event.clientX - startX - 500 * position}px)`
+            lastPic.style.transform = `translateX(${event.clientX - startX - 500 - 500 * lastPosition}px)`
+            nextPic.style.transform = `translateX(${event.clientX - startX + 500 - 500 * nextPosition}px)`
+          }
+
+          let up = event => {
+            let offset = 0
+            if (event.clientX - startX > 250) {
+              offset = 1
+            } else if (event.clientX - startX < -250) { // 左滑
+              offset = -1
+            }
+
+            currentPic.style.transform = `translateX(${500 * offset - 500 * position}px)`
+            lastPic.style.transform = `translateX(${500 * offset - 500 - 500 * lastPosition}px)`
+            nextPic.style.transform = `translateX(${500 * offset + 500 - 500 * nextPosition}px)`
+
+            currentPic.style.transition = ''
+            lastPic.style.transition = ''
+            nextPic.style.transition = ''
+
+            position = (position - offset + this.data.length) % this.data.length
+
+            document.removeEventListener('mousemove', move)
+            document.removeEventListener('mouseup', up)
+          }
+
+          document.addEventListener('mousemove', move)
+          document.addEventListener('mouseup', up)
+        })
+      }
+    }
+
+    // create
+    let carousel = new Carousel
+    // update
+    carousel.data = [
+      'https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg',
+      'https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg',
+      'https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg',
+      'https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg',
+    ]
+    carousel.render()
+
+    // mounted
+    document.getElementById('container').appendChild(carousel.root)
+  </script>
+</body>
+</html>
