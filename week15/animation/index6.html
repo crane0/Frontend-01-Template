@@ -1,0 +1,36 @@
+<style>
+  #el, #el2 {
+    width: 100px;
+    height: 100px;
+    background-color: salmon;
+  }
+</style>
+<div id="el"></div>
+<div id="el2"></div>
+<button id="pause-btn">暂停</button>
+<button id="resume-btn">继续</button>
+<button id="el2-start-btn">color animation</button>
+<script type="module">
+  // 下面的例子表明，实现的 liner ，和 css 中的几乎一样。ease 也是一样
+  import { TimeLine, Animation, ColorAnimation } from './animation6.js'
+  // https://cubic-bezier.com/#.25,.1,.25,1
+  import { cubicBezier } from './cubicBezier.js'
+
+  // let linear = t => t
+  let ease = cubicBezier(.25,.1,.25,1)
+  let el = document.getElementById('el')
+  let pause = document.getElementById('pause-btn')
+  let resume = document.getElementById('resume-btn')
+  let timeL = new TimeLine
+
+  timeL.add(new Animation(el.style, 'transform', 0, 200, 3000, 0, ease, v => `translateX(${v}px)`))
+  timeL.start()
+
+  pause.addEventListener('click', () => timeL.pause())
+  resume.addEventListener('click', () => timeL.resume())
+
+  document.getElementById('el2-start-btn').addEventListener('click', () => {
+    timeL.add(new ColorAnimation(el.style, 'backgroundColor', {r: 0, g: 0, b: 0, a: 1}, {r: 255, g: 0, b: 0, a: 1}, 3000, 0, ease))
+  })
+
+</script>

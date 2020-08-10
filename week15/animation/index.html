@@ -1,0 +1,17 @@
+<style>
+  #el {
+    width: 100px;
+    height: 100px;
+    background-color: salmon;
+  }
+</style>
+<div id="el"></div>
+<script type="module">
+  import { TimeLine, Animation } from './animation.js'
+
+  let el = document.getElementById('el')
+  let timeL = new TimeLine
+
+  timeL.add(new Animation(el.style, 'transform', v => `translateX(${v}px)`, 0, 200, 3000))
+  timeL.start()
+</script>
