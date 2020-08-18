@@ -1,0 +1,24 @@
+<style>
+  #test {
+    width: 100px;
+    height: 100px;
+    background-color: salmon;
+  }
+</style>
+<body>
+  <div id="test"></div>
+</body>
+<script src="./gesture4.js"></script>
+<script>
+  let test = document.getElementById('test')
+  getGesture(document.body)
+
+  let x = 0, y = 0
+  document.body.addEventListener('pan', e => {
+    test.style.transform = `translate(${x + e.detail.clientX - e.detail.startX}px, ${y + e.detail.clientY - e.detail.startY}px)`
+  })
+  document.body.addEventListener('panend', e => {
+    x = x + e.detail.clientX - e.detail.startX
+    y = y + e.detail.clientY - e.detail.startY
+  })
+</script>
